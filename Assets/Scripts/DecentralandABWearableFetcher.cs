@@ -18,7 +18,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
     private const string snapshotURL = "https://peer.decentraland.org/content/snapshots";
     private const string contentsURL = "https://peer.decentraland.org/content/contents/";
     private const string manifestUrlTemplate = "https://ab-cdn.decentraland.org/manifest/{0}_windows.json";
-    private const string assetBundleUrlTemplate = "https://ab-cdn.decentraland.org/{0}/{1}";
+    private const string assetBundleUrlTemplate = "https://ab-cdn.decentraland.org/{0}{1}{2}";
     private const string cacheFilePath = "AssetBundleCache.json"; // Path to save the cache file
 
     private CancellationTokenSource ct;
@@ -137,11 +137,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
         if (entityDataResult.Item1)
         {
             var entity = JsonUtility.FromJson<DecentralandEntity>(entityDataResult.Item2);
-
-            if (entity.type == "wearable")
-                await FetchManifestAndDownloadAssets(entityId);
-            else
-                Debug.Log($"{entityId} not a wearable, returning");
+            await FetchManifestAndDownloadAssets(entityId);
         }
     }
 
@@ -163,18 +159,16 @@ public class DecentralandABWearableFetcher : MonoBehaviour
         {
             Debug.Log($"Manifest downloaded: {manifestUrl}");
             DecentralandManifest manifest = JsonUtility.FromJson<DecentralandManifest>(manifestResult.Item2);
-            //Any version greater than this needs the hash in the url. For simplicity on building the url, we will ignore it
-            if (int.Parse(manifest.version[1..]) >= 25)
-            {
-                Debug.Log($"Ignored due to version being greater than 25: {manifestUrl}");
-                return;
-            }
             List<UniTask> downloadAssetBundleTask = new List<UniTask>();
             foreach (var file in manifest.files)
             {
                 if (!file.EndsWith("windows"))
                     continue;
-                string assetBundleUrl = string.Format(assetBundleUrlTemplate, manifest.version, file);
+                string assetBundleUrl;
+                if (int.Parse(manifest.version[1..]) >= 25)
+                    assetBundleUrl = string.Format(assetBundleUrlTemplate, manifest.version, $"/{entityId}" , $"/{file}");
+                else
+                    assetBundleUrl = string.Format(assetBundleUrlTemplate, manifest.version, "", $"/{file}");
                 Hash128 hash = ComputeHash(manifest.version, file);
                 if (!assetBundleCache.ContainsKey(hash))
                     downloadAssetBundleTask.Add(DownloadAssetBundleAsync(hash, assetBundleUrl));
@@ -198,7 +192,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
     }
 
     private int activeDownloads = 0;
-    private int maximumAmountOfDownloads = 5;
+    private int maximumAmountOfDownloads = 8;
 
     private async UniTask<(bool, string)> CompleteWebRequest(UnityWebRequest request, bool getTextResult = true)
     {
