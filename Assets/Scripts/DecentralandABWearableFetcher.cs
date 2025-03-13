@@ -198,7 +198,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
     }
 
     private int activeDownloads = 0;
-    private int maximumAmountOfDownloads = 20;
+    private int maximumAmountOfDownloads = 5;
 
     private async UniTask<(bool, string)> CompleteWebRequest(UnityWebRequest request, bool getTextResult = true)
     {
@@ -208,7 +208,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
                 await UniTask.Yield();
 
             activeDownloads++;
-            Debug.Log($"JUANI ACTIVE DOWNLOADS {activeDownloads}");
+            Debug.Log($"CURRENT ACTIVE DOWNLOADS {activeDownloads}");
             await request.SendWebRequest().ToUniTask();
 
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
