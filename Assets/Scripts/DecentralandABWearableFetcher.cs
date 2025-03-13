@@ -26,6 +26,8 @@ public class DecentralandABWearableFetcher : MonoBehaviour
 
     private int totalFilesDownloaded;
     private int totalFilesToDownload = 13_000;
+
+    public TextAsset snapshotExample;
     void Start()
     {
         ct = new CancellationTokenSource();
@@ -53,7 +55,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
         Debug.Log("Completed www.google.com");
         try
         {
-            Debug.Log($"Getting Snapshot");
+            /*Debug.Log($"Getting Snapshot");
             string catalystSnapshotURL = await GetHashWithMostEntitiesAsync();
             Debug.Log($"Getting Catalyst Content");
             (bool, string) catalystResult;
@@ -61,12 +63,12 @@ public class DecentralandABWearableFetcher : MonoBehaviour
             {
                 catalystResult = await CompleteWebRequest(webRequest);
             }
-            Debug.Log($"Starting AB download");
-            if (catalystResult.Item1)
-            {
-                List<string> entityIds = ExtractEntityIds(catalystResult.Item2);
+            Debug.Log($"Starting AB download");*/
+            //if (catalystResult.Item1)
+            //{
+                List<string> entityIds = ExtractEntityIds(snapshotExample.text);
                 List<UniTask> entityTasks = new List<UniTask>();
-                int batchSize = 20;
+                int batchSize = 100;
                 for (int i = 0; i < entityIds.Count; i++)
                 {
                     await FetchEntityDataAsync(entityIds[i]);
@@ -77,7 +79,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
                         await UniTask.WhenAll(entityTasks);
                         entityTasks.Clear(); // Clear the list to start the next batch
                     }
-                }
+             //   }
             }
         }
         catch (Exception ex)
@@ -192,7 +194,7 @@ public class DecentralandABWearableFetcher : MonoBehaviour
     }
 
     private int activeDownloads = 0;
-    private int maximumAmountOfDownloads = 8;
+    private int maximumAmountOfDownloads = 15;
 
     private async UniTask<(bool, string)> CompleteWebRequest(UnityWebRequest request, bool getTextResult = true)
     {
@@ -230,10 +232,10 @@ public class DecentralandABWearableFetcher : MonoBehaviour
         if (ct.IsCancellationRequested)
             return;
 
-        if (Caching.IsVersionCached(assetBundleUrl, hash))
-            return;
+        //if (Caching.IsVersionCached(assetBundleUrl, hash))
+        //    return;
 
-        using UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl, hash);
+        using UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl/*, hash*/);
 
         (bool, string) assetBundleResult = await CompleteWebRequest(request, false);
         
